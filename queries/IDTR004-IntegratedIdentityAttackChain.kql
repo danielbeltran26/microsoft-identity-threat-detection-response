@@ -1,0 +1,140 @@
+let FailureThreshold = 5;
+let IdentityThreshold = 5;
+let CorrelationWindow = 30m;
+let SearchHorizon = 75m;
+let Failures =
+    SecurityEvent
+    | where TimeGenerated > ago(SearchHorizon)
+    | where Computer =~ "DC01.corporate.test"
+    | where EventID == 4625
+    | where TargetAccount contains "idtr-user"
+    | where Status =~ "0xc000006d"
+    | where SubStatus =~ "0xc000006a"
+    | project
+        Computer,
+        FailureTimeUTC = TimeGenerated,
+        FailedTargetAccount = tolower(TargetAccount),
+        FailureStatus = Status,
+        FailureSubStatus = SubStatus;
+let Successes =
+    SecurityEvent
+    | where TimeGenerated > ago(SearchHorizon)
+    | where Computer =~ "DC01.corporate.test"
+    | where EventID == 4624
+    | where TargetAccount contains "idtr-user"
+    | where LogonType == 3
+    | extend
+        SuccessAccountParts = split(TargetAccount, "\\")
+    | extend
+        SuccessNTDomain = tostring(SuccessAccountParts[0]),
+        SuccessAccountName = tolower(tostring(SuccessAccountParts[1]))
+    | project
+        Computer,
+        SuccessTimeUTC = TimeGenerated,
+        SuccessTargetAccount = TargetAccount,
+        SuccessNTDomain,
+        SuccessAccountName,
+        SuccessLogonType = LogonType,
+        AuthenticationPackageName;
+let FreshGroupAdditions =
+    SecurityEvent
+    | where TimeGenerated > ago(SearchHorizon)
+    | where ingestion_time() > ago(5m)
+    | where Computer =~ "DC01.corporate.test"
+    | where EventID == 4728
+    | where TargetAccount =~ @"CORPORATE\IDTR-HighValue-Lab"
+    | extend
+        MemberDisplayName = extract(@"^CN=([^,]+)", 1, MemberName),
+        MemberAccountName = replace_string(
+            tolower(extract(@"^CN=([^,]+)", 1, MemberName)),
+            " ",
+            "-"
+        ),
+        ActorParts = split(SubjectAccount, "\\")
+    | extend
+        ActorNTDomain = tostring(ActorParts[0]),
+        ActorAccountName = tostring(ActorParts[1])
+    | project
+        Computer,
+        GroupAddTimeUTC = TimeGenerated,
+        GroupAddIngestionUTC = ingestion_time(),
+        ActorAccount = SubjectAccount,
+        ActorNTDomain,
+        ActorAccountName,
+        GroupAccount = TargetAccount,
+        GroupName = tostring(split(TargetAccount, "\\")[1]),
+        GroupSid = TargetSid,
+        MemberName,
+        MemberSid,
+        MemberDisplayName,
+        MemberAccountName;
+Successes
+| join kind=inner FreshGroupAdditions on Computer
+| where SuccessTimeUTC < GroupAddTimeUTC
+| where SuccessTimeUTC >= GroupAddTimeUTC - CorrelationWindow
+| where SuccessAccountName == MemberAccountName
+| join kind=inner Failures on Computer
+| where FailureTimeUTC < SuccessTimeUTC
+| where FailureTimeUTC >= SuccessTimeUTC - CorrelationWindow
+| summarize
+    FirstFailureUTC = min(FailureTimeUTC),
+    LastFailureUTC = max(FailureTimeUTC),
+    FailedAttempts = count(),
+    TargetIdentityCount = dcount(FailedTargetAccount),
+    TargetIdentities = make_set(FailedTargetAccount, 20),
+    FailureCodes = make_set(
+        strcat(FailureStatus, ":", FailureSubStatus),
+        10
+    )
+    by
+        Computer,
+        SuccessTimeUTC,
+        SuccessTargetAccount,
+        SuccessNTDomain,
+        SuccessAccountName,
+        SuccessLogonType,
+        AuthenticationPackageName,
+        GroupAddTimeUTC,
+        GroupAddIngestionUTC,
+        ActorAccount,
+        ActorNTDomain,
+        ActorAccountName,
+        GroupAccount,
+        GroupName,
+        GroupSid,
+        MemberName,
+        MemberSid,
+        MemberDisplayName
+| where FailedAttempts >= FailureThreshold
+| where TargetIdentityCount >= IdentityThreshold
+| extend
+    HostName = tostring(split(Computer, ".")[0]),
+    DnsDomain = extract(@"^[^.]+\.(.+)$", 1, Computer)
+| project
+    FirstFailureUTC,
+    LastFailureUTC,
+    FailedAttempts,
+    TargetIdentityCount,
+    TargetIdentities,
+    FailureCodes,
+    SuccessTimeUTC,
+    SuccessTargetAccount,
+    AccountName = SuccessAccountName,
+    NTDomain = SuccessNTDomain,
+    SuccessLogonType,
+    AuthenticationPackageName,
+    GroupAddTimeUTC,
+    GroupAddIngestionUTC,
+    ActorAccount,
+    ActorNTDomain,
+    ActorAccountName,
+    GroupAccount,
+    GroupName,
+    GroupSid,
+    MemberName,
+    MemberSid,
+    MemberDisplayName,
+    Computer,
+    HostName,
+    DnsDomain
+| extend TimeGenerated = GroupAddTimeUTC

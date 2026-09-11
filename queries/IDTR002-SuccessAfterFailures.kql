@@ -1,0 +1,97 @@
+// IDTR002 - Successful Authentication After Repeated Failures
+let FailureThreshold = 5;
+let DetectionWindow = 30m;
+let IngestionDelayAllowance = 10m;
+let RuleInterval = 5m;
+let SearchHorizon =
+    DetectionWindow
+    + IngestionDelayAllowance
+    + RuleInterval;
+let RelevantFailures =
+    SecurityEvent
+    | where TimeGenerated > ago(SearchHorizon)
+    | where Computer =~ "DC01.corporate.test"
+    | where EventID == 4625
+    | where TargetAccount contains "idtr-user"
+    | where Status =~ "0xc000006d"
+    | where SubStatus =~ "0xc000006a"
+    | project
+        TargetAccount,
+        Computer,
+        FailureTimeUTC = TimeGenerated,
+        FailureIpAddress = IpAddress,
+        FailureWorkstationName = WorkstationName,
+        FailureStatus = Status,
+        FailureSubStatus = SubStatus;
+let FreshSuccesses =
+    SecurityEvent
+    | where TimeGenerated > ago(SearchHorizon)
+    | where ingestion_time() > ago(RuleInterval)
+    | where Computer =~ "DC01.corporate.test"
+    | where EventID == 4624
+    | where TargetAccount contains "idtr-user"
+    | where LogonType == 3
+    | project
+        TargetAccount,
+        Computer,
+        SuccessTimeUTC = TimeGenerated,
+        SuccessIngestionUTC = ingestion_time(),
+        SuccessLogonType = LogonType,
+        SuccessWorkstationName = WorkstationName,
+        SuccessIpAddress = IpAddress,
+        AuthenticationPackageName;
+FreshSuccesses
+| join kind=inner RelevantFailures on TargetAccount, Computer
+| where FailureTimeUTC < SuccessTimeUTC
+| where FailureTimeUTC >= SuccessTimeUTC - DetectionWindow
+| summarize
+    FirstFailureUTC = min(FailureTimeUTC),
+    LastFailureUTC = max(FailureTimeUTC),
+    FailedAttempts = count(),
+    FailureSourceAddresses = make_set_if(
+        FailureIpAddress,
+        isnotempty(FailureIpAddress)
+            and FailureIpAddress != "-",
+        10
+    ),
+    FailureWorkstations = make_set(FailureWorkstationName, 10),
+    FailureCodes = make_set(
+        strcat(FailureStatus, ":", FailureSubStatus),
+        10
+    )
+    by
+        SuccessTimeUTC,
+        SuccessIngestionUTC,
+        TargetAccount,
+        Computer,
+        SuccessLogonType,
+        SuccessWorkstationName,
+        SuccessIpAddress,
+        AuthenticationPackageName
+| where FailedAttempts >= FailureThreshold
+| extend
+    AccountParts = split(TargetAccount, "\\"),
+    HostName = tostring(split(Computer, ".")[0]),
+    DnsDomain = extract(@"^[^.]+\.(.+)$", 1, Computer)
+| extend
+    NTDomain = tostring(AccountParts[0]),
+    AccountName = tostring(AccountParts[1])
+| project
+    FirstFailureUTC,
+    LastFailureUTC,
+    SuccessTimeUTC,
+    SuccessIngestionUTC,
+    FailedAttempts,
+    TargetAccount,
+    NTDomain,
+    AccountName,
+    Computer,
+    HostName,
+    DnsDomain,
+    SuccessLogonType,
+    SuccessWorkstationName,
+    SuccessIpAddress,
+    AuthenticationPackageName,
+    FailureSourceAddresses,
+    FailureWorkstations,
+    FailureCodes

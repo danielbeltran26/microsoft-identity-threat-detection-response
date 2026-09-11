@@ -1,0 +1,33 @@
+// Project 2: Microsoft Identity Threat Detection and Response
+// Milestone 1: Validate fresh Azure Monitor Agent and Windows telemetry.
+// Read-only query. Update TargetComputer only if schema profiling proves that
+// the Computer field uses a different value.
+
+let TargetComputer = "DC01.corporate.test";
+union
+(
+    Heartbeat
+    | where TimeGenerated > ago(30m)
+    | where Computer =~ TargetComputer
+    | where Category == "Azure Monitor Agent"
+    | summarize Records = count(), LatestEvent = max(TimeGenerated)
+    | extend Check = "Azure Monitor Agent heartbeat"
+),
+(
+    SecurityEvent
+    | where TimeGenerated > ago(30m)
+    | where Computer =~ TargetComputer
+    | summarize Records = count(), LatestEvent = max(TimeGenerated)
+    | extend Check = "Windows Security events"
+),
+(
+    Event
+    | where TimeGenerated > ago(30m)
+    | where Computer =~ TargetComputer
+    | where EventID == 4104
+    | summarize Records = count(), LatestEvent = max(TimeGenerated)
+    | extend Check = "PowerShell Script Block Logging (Event ID 4104)"
+)
+| extend Status = iff(Records > 0 and LatestEvent > ago(15m), "Healthy", "Investigate")
+| project Check, Status, Records, LatestEvent
+| order by Check asc

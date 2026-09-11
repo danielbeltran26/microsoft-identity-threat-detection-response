@@ -1,0 +1,54 @@
+// IDTR003 - High-Value Group Membership Change
+// Scheduled-rule settings:
+//   Frequency: 5 minutes
+//   Period: 15 minutes
+//   Trigger: results greater than 0
+//   Event grouping: Alert per result
+//
+// Microsoft Sentinel evaluates scheduled rules five minutes after their
+// scheduled time. The ingestion window therefore processes records that are
+// between five and ten minutes old. Consecutive evaluations use adjacent,
+// non-overlapping windows so each ingested event is selected once.
+
+let RuleLookback = 15m;
+SecurityEvent
+| where TimeGenerated > ago(RuleLookback)
+| where ingestion_time() between (ago(10m) .. ago(5m))
+| where Computer =~ "DC01.corporate.test"
+| where EventID in (4728, 4729)
+| where TargetAccount =~ @"CORPORATE\IDTR-HighValue-Lab"
+| extend
+    EventTimeUTC = TimeGenerated,
+    EventIngestionUTC = ingestion_time(),
+    ChangeAction = case(
+        EventID == 4728, "MemberAdded",
+        EventID == 4729, "MemberRemoved",
+        "Unknown"
+    ),
+    ActorParts = split(SubjectAccount, "\\"),
+    GroupParts = split(TargetAccount, "\\"),
+    HostName = tostring(split(Computer, ".")[0]),
+    DnsDomain = extract(@"^[^.]+\.(.+)$", 1, Computer),
+    MemberDisplayName = extract(@"^CN=([^,]+)", 1, MemberName)
+| extend
+    ActorNTDomain = tostring(ActorParts[0]),
+    ActorAccountName = tostring(ActorParts[1]),
+    GroupName = tostring(GroupParts[1]),
+    GroupSid = TargetSid
+| project
+    EventTimeUTC,
+    EventIngestionUTC,
+    EventID,
+    ChangeAction,
+    SubjectAccount,
+    ActorNTDomain,
+    ActorAccountName,
+    TargetAccount,
+    GroupName,
+    GroupSid,
+    MemberName,
+    MemberDisplayName,
+    MemberSid,
+    Computer,
+    HostName,
+    DnsDomain

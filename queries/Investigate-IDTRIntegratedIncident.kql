@@ -1,0 +1,47 @@
+// Reconstruct the integrated identity attack-chain timeline for investigation.
+// Adjust InvestigationHorizon only when the authorised evidence window is known.
+let InvestigationHorizon = 24h;
+let RecordingHost = "DC01.corporate.test";
+let ControlledAccountPrefix = "idtr-user";
+let MonitoredGroup = "IDTR-HighValue-Lab";
+SecurityEvent
+| where TimeGenerated > ago(InvestigationHorizon)
+| where Computer =~ RecordingHost
+| where
+    (
+        EventID in (4624, 4625)
+        and TargetAccount has ControlledAccountPrefix
+    )
+    or
+    (
+        EventID in (4728, 4729)
+        and TargetAccount has MonitoredGroup
+    )
+| extend InvestigationPhase = case(
+    EventID == 4625, "Authentication failure",
+    EventID == 4624, "Authentication success",
+    EventID == 4728, "Group addition",
+    EventID == 4729, "Group removal",
+    "Other"
+)
+| extend EvidenceIdentity = case(
+    EventID in (4624, 4625), TargetAccount,
+    EventID in (4728, 4729), MemberName,
+    ""
+)
+| project
+    TimeGenerated,
+    IngestionTimeUTC = ingestion_time(),
+    InvestigationPhase,
+    EventID,
+    Activity,
+    SubjectAccount,
+    TargetAccount,
+    EvidenceIdentity,
+    MemberName,
+    MemberSid,
+    LogonType,
+    Status,
+    SubStatus,
+    Computer
+| order by TimeGenerated asc

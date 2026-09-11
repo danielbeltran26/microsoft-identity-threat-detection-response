@@ -1,0 +1,40 @@
+// Project 2: Microsoft Identity Threat Detection and Response
+// Milestone 2: Profile the SecurityEvent fields populated by controlled
+// authentication and high-value group-membership activity.
+//
+// The identity filter intentionally uses `contains` instead of `has` because
+// the observed account names are hyphenated (for example, idtr-user01).
+
+let TargetComputer = "DC01.corporate.test";
+let ProfileWindow = 7d;
+SecurityEvent
+| where TimeGenerated > ago(ProfileWindow)
+| where Computer =~ TargetComputer
+| where EventID in (4624, 4625, 4728, 4729)
+| where TargetAccount contains "idtr-user"
+    or TargetAccount contains "IDTR-HighValue-Lab"
+    or MemberName contains "IDTR User"
+| extend EventCategory = case(
+    EventID == 4624, "Successful authentication",
+    EventID == 4625, "Failed authentication",
+    EventID == 4728, "High-value group member added",
+    EventID == 4729, "High-value group member removed",
+    "Other"
+)
+| summarize
+    Records = count(),
+    FirstEventUTC = min(TimeGenerated),
+    LatestEventUTC = max(TimeGenerated),
+    DistinctTargetAccounts = dcountif(TargetAccount, isnotempty(TargetAccount)),
+    TargetAccountPopulated = countif(isnotempty(TargetAccount)),
+    SubjectAccountPopulated = countif(isnotempty(SubjectAccount)),
+    MemberNamePopulated = countif(isnotempty(MemberName)),
+    IpAddressPopulated = countif(isnotempty(IpAddress) and IpAddress != "-"),
+    NonLoopbackIpAddressPopulated = countif(
+        isnotempty(IpAddress)
+        and IpAddress !in ("-", "::1", "127.0.0.1")
+    ),
+    WorkstationNamePopulated = countif(isnotempty(WorkstationName) and WorkstationName != "-"),
+    ObservedLogonTypes = make_set(LogonType, 10)
+    by EventID, EventCategory
+| order by EventID asc
