@@ -58,16 +58,16 @@ complete lifecycle rather than stopping after alert generation.
 ## Architecture
 
 ```mermaid
-flowchart TD
-    AD["Disposable identities and synthetic high-value group"] --> DC["DC01 domain controller"]
-    DC --> ARC["Azure Arc management connection"]
+flowchart TB
+    USERS["Test identities"] --> DC["DC01"]
+    DC --> ARC["Azure Arc"]
     DC --> AMA["Azure Monitor Agent"]
-    DCR["Data Collection Rules"] --> AMA
-    AMA --> LAW["Log Analytics workspace"]
+    DCR["Collection rules"] --> AMA
+    AMA --> LAW["Log Analytics"]
     LAW --> SENT["Microsoft Sentinel"]
-    SENT --> RULE["IDTR analytics rules"]
-    RULE --> INC["Mapped alerts and incidents"]
-    INC --> RESP["Investigation, response and verified closure"]
+    SENT --> RULE["IDTR rules"]
+    RULE --> INC["Alerts and incidents"]
+    INC --> RESP["Investigate, respond and close"]
 ```
 
 `DC01` is a VMware-hosted Windows Server domain controller. Azure Arc provides
@@ -195,7 +195,7 @@ the complete 62-screenshot evidence sequence.
 - [Verify directory recovery and fresh telemetry](scripts/Test-IDTRRecoveryState.ps1)
 - [Restore the safe laboratory state](scripts/Restore-IDTRLabState.ps1)
 - [Independently verify the final state](scripts/Test-IDTRFinalState.ps1)
-- Deterministic validation of the completed repository
+- [Run deterministic validation of the completed repository](scripts/Test-Project2Repository.ps1)
 
 ### Operations and safe test data
 

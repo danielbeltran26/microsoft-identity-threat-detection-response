@@ -29,29 +29,23 @@ chain.
 ## Logical architecture
 
 ```mermaid
-flowchart TD
-    subgraph LAB["VMware identity laboratory"]
-        OBJ["Disposable users and synthetic group"]
-        DC["DC01 domain controller"]
-        LOGS["Windows Security and PowerShell logs"]
-        OBJ --> DC
-        DC --> LOGS
+flowchart TB
+    subgraph LAB["VMware lab"]
+        direction TB
+        OBJ["Test identities"] --> DC["DC01"]
+        DC --> LOGS["Windows logs"]
     end
 
     subgraph COLLECTION["Hybrid collection"]
-        ARC["Azure Arc"]
-        AMA["Azure Monitor Agent"]
-        DCR["Data Collection Rules"]
-        ARC --> AMA
-        DCR --> AMA
+        direction TB
+        ARC["Azure Arc"] --> AMA["Azure Monitor Agent"]
+        DCR["Collection rules"] --> AMA
     end
 
-    subgraph AZURE["Azure security analytics"]
-        LAW["Log Analytics"]
-        SENT["Microsoft Sentinel"]
-        RULE["IDTR rules"]
-        LAW --> SENT
-        SENT --> RULE
+    subgraph AZURE["Security analytics"]
+        direction TB
+        LAW["Log Analytics"] --> SENT["Microsoft Sentinel"]
+        SENT --> RULE["IDTR rules"]
     end
 
     LOGS --> AMA
@@ -77,20 +71,13 @@ Collection Rule association and fresh workspace rows all pass validation.
 ## Identity telemetry flow
 
 ```mermaid
-sequenceDiagram
-    participant T as Controlled test
-    participant D as DC01
-    participant A as AMA and DCR
-    participant L as Log Analytics
-    participant S as Sentinel
-
-    T->>D: Generate authorised identity activity
-    D->>D: Record Windows security event
-    D->>A: Expose selected event channel
-    A->>L: Send collected record
-    L->>S: Make SecurityEvent queryable
-    S->>S: Evaluate IDTR rule
-    S->>S: Create mapped alert and incident update
+flowchart TB
+    TEST["Authorised test"] --> EVENT["DC01 security event"]
+    EVENT --> COLLECT["AMA collection"]
+    DCR["Collection rules"] --> COLLECT
+    COLLECT --> LOGS["Log Analytics"]
+    LOGS --> RULE["Sentinel rule"]
+    RULE --> RESULT["Alert and incident"]
 ```
 
 Milestone 3 validated the flow with five Event ID `4625` records targeting
@@ -167,12 +154,12 @@ followed the failures.
 ## Analyst response layer
 
 ```mermaid
-flowchart TD
-    INC["Fresh incident"] --> TRIAGE["Assign, activate and triage"]
-    TRIAGE --> INVESTIGATE["Validate timeline and entities"]
-    INVESTIGATE --> CONTAIN["Enforce identity containment"]
-    CONTAIN --> RECOVER["Verify directory and telemetry recovery"]
-    RECOVER --> CLOSE["Record decision and close"]
+flowchart TB
+    INC["New incident"] --> TRIAGE["Assign and triage"]
+    TRIAGE --> INVESTIGATE["Check timeline and entities"]
+    INVESTIGATE --> CONTAIN["Contain identities"]
+    CONTAIN --> RECOVER["Verify recovery"]
+    RECOVER --> CLOSE["Document and close"]
 ```
 
 Incident tasks make response state explicit. Source telemetry remains the

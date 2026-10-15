@@ -31,26 +31,14 @@ The investigation objective is not only to count failures. It is to determine:
 
 ```mermaid
 flowchart TB
-    subgraph SOURCE["Test and collection"]
-        direction LR
-        TEST["Five controlled<br/>invalid-password attempts"] --> EVT["Windows Event<br/>ID 4625"]
-        EVT --> AMA["Azure Monitor<br/>Agent"]
-    end
-
-    subgraph DETECTION["Detection and alerting"]
-        direction LR
-        SE["SecurityEvent"] --> RULE["IDTR001 scheduled<br/>analytics rule"]
-        RULE --> ALERT["Mapped<br/>Medium alert"]
-    end
-
-    subgraph RESPONSE["Incident response"]
-        direction LR
-        INC["Incident 4"] --> VERIFY["Investigation and<br/>final-state verification"]
-        VERIFY --> CLOSE["Benign Positive<br/>closure"]
-    end
-
-    AMA --> SE
-    ALERT --> INC
+    TEST["Five failed logons"] --> EVENT["Windows Event 4625"]
+    EVENT --> AMA["Azure Monitor Agent"]
+    AMA --> DATA["SecurityEvent"]
+    DATA --> RULE["IDTR001 rule"]
+    RULE --> ALERT["Medium alert"]
+    ALERT --> INC["Incident 4"]
+    INC --> VERIFY["Investigate and verify"]
+    VERIFY --> CLOSE["Benign Positive closure"]
 ```
 
 ## Detection design
@@ -253,6 +241,8 @@ If any value had failed, the response order would have been:
    not restore the validated baseline.
 
 ## Evidence
+
+The validated screenshots are displayed below. Select an image to open it at full size.
 
 ### Validated rule configuration
 

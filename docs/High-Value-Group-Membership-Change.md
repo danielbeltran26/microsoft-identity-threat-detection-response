@@ -43,10 +43,15 @@ The controlled sequence produced exactly one addition followed by one removal:
 - Member SID: `S-1-5-21-2144938337-3584204851-355588034-1164`
 - Final group membership: zero
 
-The local and cloud evidence is retained in:
+The local and cloud evidence is displayed below.
 
-- [`m05-01-idtr003-local-group-change-events.png`](../screenshots/m05-01-idtr003-local-group-change-events.png)
-- [`m05-02-idtr003-cloud-group-change-ingestion.png`](../screenshots/m05-02-idtr003-cloud-group-change-ingestion.png)
+### Local group-change events
+
+![Local Event 4728 addition and Event 4729 removal](../screenshots/m05-01-idtr003-local-group-change-events.png)
+
+### Cloud-ingested group changes
+
+![Cloud-ingested group addition and removal](../screenshots/m05-02-idtr003-cloud-group-change-ingestion.png)
 
 ## Final KQL design
 
@@ -87,7 +92,7 @@ The authoritative validation proved:
 - Four entity mappings persisted
 
 Evidence:
-[`m05-03-idtr003-validated-rule-configuration.png`](../screenshots/m05-03-idtr003-validated-rule-configuration.png).
+![IDTR003 persisted rule configuration](../screenshots/m05-03-idtr003-validated-rule-configuration.png)
 
 ## Rule configuration
 
@@ -128,7 +133,7 @@ relationship between Alert-per-result event grouping and entity-based incident
 grouping.
 
 Evidence:
-[`m05-04-idtr003-alerts-and-incident.png`](../screenshots/m05-04-idtr003-alerts-and-incident.png).
+![IDTR003 alerts grouped into Incident 8](../screenshots/m05-04-idtr003-alerts-and-incident.png)
 
 ## Entity mapping
 
@@ -145,7 +150,7 @@ No IP entity was mapped because this group-management scenario did not supply a
 reliable remote source address. No address was invented.
 
 Evidence:
-[`m05-05-idtr003-mapped-entities.png`](../screenshots/m05-05-idtr003-mapped-entities.png).
+![IDTR003 mapped actor, member, host and group entities](../screenshots/m05-05-idtr003-mapped-entities.png)
 
 ## Response and safe-state validation
 
@@ -164,7 +169,7 @@ as active exposure: the authoritative safety controls were disabled state,
 lockout state and current group membership.
 
 Evidence:
-[`m05-06-idtr003-verified-safe-state.png`](../screenshots/m05-06-idtr003-verified-safe-state.png).
+![IDTR003 verified final safe state](../screenshots/m05-06-idtr003-verified-safe-state.png)
 
 An analyst investigation note was saved. When the later pair arrived, a second
 comment corrected the final alert inventory and distinguished two controlled
@@ -175,7 +180,7 @@ and the detection represented them correctly, but the activity was authorised,
 controlled and fully reversed.
 
 Evidence:
-[`m05-07-idtr003-closed-benign-positive.png`](../screenshots/m05-07-idtr003-closed-benign-positive.png).
+![Incident 8 closed as Benign Positive](../screenshots/m05-07-idtr003-closed-benign-positive.png)
 
 ## Investigation guidance
 

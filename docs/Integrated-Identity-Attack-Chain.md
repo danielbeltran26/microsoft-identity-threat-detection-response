@@ -22,7 +22,7 @@ Directory and Azure Arc services were running, Azure Monitor Agent was healthy,
 and a fresh harmless Event `4688` reached `SecurityEvent`.
 
 Evidence:
-[`m06-01-integrated-chain-baseline.png`](../screenshots/m06-01-integrated-chain-baseline.png).
+![IDTR004 safe baseline and healthy telemetry](../screenshots/m06-01-integrated-chain-baseline.png)
 
 ## Detection objective
 
@@ -63,8 +63,13 @@ The final controlled sequence produced:
 
 Evidence:
 
-- [`m06-03-integrated-chain-local-sequence.png`](../screenshots/m06-03-integrated-chain-local-sequence.png)
-- [`m06-04-integrated-chain-cloud-ingestion.png`](../screenshots/m06-04-integrated-chain-cloud-ingestion.png)
+### Local attack-chain sequence
+
+![Local IDTR004 event sequence](../screenshots/m06-03-integrated-chain-local-sequence.png)
+
+### Cloud-ingested attack-chain sequence
+
+![Cloud-ingested IDTR004 event sequence](../screenshots/m06-04-integrated-chain-cloud-ingestion.png)
 
 ## Safe simulation design
 
@@ -158,7 +163,7 @@ persisted configuration.
 | Deployed techniques | T1110; T1078; T1098 |
 
 Evidence:
-[`m06-02-idtr004-validated-rule-configuration.png`](../screenshots/m06-02-idtr004-validated-rule-configuration.png).
+![IDTR004 persisted rule configuration](../screenshots/m06-02-idtr004-validated-rule-configuration.png)
 
 ## Rule-health monitoring
 
@@ -192,7 +197,7 @@ once. The earlier two alerts were retained and documented honestly; they were
 not duplicates of the final source sequence.
 
 Evidence:
-[`m06-05-idtr004-alert-and-incident.png`](../screenshots/m06-05-idtr004-alert-and-incident.png).
+![IDTR004 alert grouped into Incident 13](../screenshots/m06-05-idtr004-alert-and-incident.png)
 
 ## Entity mapping
 
@@ -209,7 +214,7 @@ No IP entity was created because the authentication method did not provide a
 reliable remote source address. No address was inferred or invented.
 
 Evidence:
-[`m06-06-idtr004-mapped-entities.png`](../screenshots/m06-06-idtr004-mapped-entities.png).
+![IDTR004 mapped account, actor, host and group entities](../screenshots/m06-06-idtr004-mapped-entities.png)
 
 ## Response and closure
 
@@ -227,7 +232,7 @@ counters were recorded but did not represent active access, lockout or group
 membership.
 
 Evidence:
-[`m06-07-integrated-chain-verified-safe-state.png`](../screenshots/m06-07-integrated-chain-verified-safe-state.png).
+![IDTR004 verified final safe state](../screenshots/m06-07-integrated-chain-verified-safe-state.png)
 
 The analyst comment documented the authorised sequence, exact final alert,
 mapped entities, missing source address and restored state. Incident `13` was
@@ -236,7 +241,7 @@ classified **Benign Positive / Suspicious But Expected**. The behaviour was
 suspicious and correctly detected, but it was authorised and fully reversed.
 
 Evidence:
-[`m06-08-idtr004-closed-benign-positive.png`](../screenshots/m06-08-idtr004-closed-benign-positive.png).
+![Incident 13 closed as Benign Positive](../screenshots/m06-08-idtr004-closed-benign-positive.png)
 
 ## Investigation guidance
 

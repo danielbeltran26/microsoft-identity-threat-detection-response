@@ -179,13 +179,35 @@ platform limitation, not treated as evidence that the incident was absent.
 
 ## Evidence
 
-- [Validated IDTR002 rule configuration](../screenshots/m04-01-idtr002-validated-rule-configuration.png)
-- [Corrected local event sequence](../screenshots/m04-02-idtr002-local-event-sequence.png)
-- [Cloud-ingested sequence](../screenshots/m04-03-idtr002-cloud-ingestion.png)
-- [Generated alert and Incident 6](../screenshots/m04-04-idtr002-alert-and-incident.png)
-- [Mapped Account and Host entities](../screenshots/m04-05-idtr002-mapped-entities.png)
-- [Verified safe final state](../screenshots/m04-06-idtr002-verified-safe-state.png)
-- [Closed Benign Positive incident](../screenshots/m04-07-idtr002-closed-benign-positive.png)
+The validated screenshots are displayed below. Select an image to open it at full size.
+
+### Validated rule configuration
+
+![Validated IDTR002 rule configuration](../screenshots/m04-01-idtr002-validated-rule-configuration.png)
+
+### Corrected local event sequence
+
+![Corrected local authentication sequence](../screenshots/m04-02-idtr002-local-event-sequence.png)
+
+### Cloud-ingested sequence
+
+![Cloud-ingested authentication sequence](../screenshots/m04-03-idtr002-cloud-ingestion.png)
+
+### Generated alert and incident
+
+![IDTR002 alert and Incident 6](../screenshots/m04-04-idtr002-alert-and-incident.png)
+
+### Mapped entities
+
+![Mapped Account and Host entities](../screenshots/m04-05-idtr002-mapped-entities.png)
+
+### Verified safe final state
+
+![Verified IDTR002 safe state](../screenshots/m04-06-idtr002-verified-safe-state.png)
+
+### Closed incident
+
+![Incident 6 closed as Benign Positive](../screenshots/m04-07-idtr002-closed-benign-positive.png)
 
 ## Production considerations
 

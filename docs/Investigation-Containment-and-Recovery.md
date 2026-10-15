@@ -14,12 +14,12 @@ the evidence, not on advance knowledge that the activity was a test.
 ## Validated workflow
 
 ```mermaid
-flowchart TD
-    A["Fresh IDTR004 alert"] --> B["Assign incident and create tasks"]
-    B --> C["Validate timeline and entities"]
-    C --> D["Enforce identity containment"]
-    D --> E["Verify directory and telemetry recovery"]
-    E --> F["Document, classify and close"]
+flowchart TB
+    ALERT["New IDTR004 alert"] --> ASSIGN["Assign incident"]
+    ASSIGN --> CHECK["Check timeline and entities"]
+    CHECK --> CONTAIN["Contain identities"]
+    CONTAIN --> RECOVER["Verify recovery"]
+    RECOVER --> CLOSE["Document and close"]
 ```
 
 Incident `14` was created from one fresh High-severity IDTR004 alert. It was
