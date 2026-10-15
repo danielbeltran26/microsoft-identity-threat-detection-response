@@ -30,21 +30,21 @@ The investigation objective is not only to count failures. It is to determine:
 ## Detection flow
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph SOURCE["Test and collection"]
-        direction TB
+        direction LR
         TEST["Five controlled<br/>invalid-password attempts"] --> EVT["Windows Event<br/>ID 4625"]
         EVT --> AMA["Azure Monitor<br/>Agent"]
     end
 
     subgraph DETECTION["Detection and alerting"]
-        direction TB
+        direction LR
         SE["SecurityEvent"] --> RULE["IDTR001 scheduled<br/>analytics rule"]
         RULE --> ALERT["Mapped<br/>Medium alert"]
     end
 
     subgraph RESPONSE["Incident response"]
-        direction TB
+        direction LR
         INC["Incident 4"] --> VERIFY["Investigation and<br/>final-state verification"]
         VERIFY --> CLOSE["Benign Positive<br/>closure"]
     end
