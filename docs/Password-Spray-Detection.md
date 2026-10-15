@@ -31,14 +31,26 @@ The investigation objective is not only to count failures. It is to determine:
 
 ```mermaid
 flowchart LR
-    TEST["Five controlled invalid-password attempts"] --> EVT["Windows Event ID 4625"]
-    EVT --> AMA["Azure Monitor Agent"]
-    AMA --> SE["SecurityEvent"]
-    SE --> RULE["IDTR001 scheduled analytics rule"]
-    RULE --> ALERT["Mapped Medium alert"]
-    ALERT --> INC["Incident 4"]
-    INC --> VERIFY["Investigation and final-state verification"]
-    VERIFY --> CLOSE["Benign Positive closure"]
+    subgraph SOURCE["Test and collection"]
+        direction TB
+        TEST["Five controlled<br/>invalid-password attempts"] --> EVT["Windows Event<br/>ID 4625"]
+        EVT --> AMA["Azure Monitor<br/>Agent"]
+    end
+
+    subgraph DETECTION["Detection and alerting"]
+        direction TB
+        SE["SecurityEvent"] --> RULE["IDTR001 scheduled<br/>analytics rule"]
+        RULE --> ALERT["Mapped<br/>Medium alert"]
+    end
+
+    subgraph RESPONSE["Incident response"]
+        direction TB
+        INC["Incident 4"] --> VERIFY["Investigation and<br/>final-state verification"]
+        VERIFY --> CLOSE["Benign Positive<br/>closure"]
+    end
+
+    AMA --> SE
+    ALERT --> INC
 ```
 
 ## Detection design
